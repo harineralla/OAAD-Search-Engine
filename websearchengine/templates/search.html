@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Article Search</title>
+</head>
+<body>
+    <h1>Article Search</h1>
+    <form action="{% url 'web:search' %}" method="post">
+        {% csrf_token %}
+        <input type="text" name="keyword" placeholder="Enter keyword">
+        <br>
+        <input type="radio" name="search_type" value="AND" checked> AND
+        <input type="radio" name="search_type" value="OR"> OR
+        <br>
+        <input type="submit" value="Search">
+    </form>
+    {% if error_message %}
+    <p>{{ error_message }}</p>
+    {% endif %}
+    {% if query_result %}
+    <h2>Search Results:</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Headline</th>
+                <th>URL</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in query_result.iterrows %}
+            <tr>
+                <td>{{ result.1.headlines }}</td>
+                <td>{{ result.1.url }}</td>
+                <td>{{ result.1.short_description }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</body>
+</html>
