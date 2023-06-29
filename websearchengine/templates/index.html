@@ -17,8 +17,20 @@
             <div class="logo">Cyberminer Search Engine</div>
         </h1>
         <div class="inputArea">
-            <input type="text" class="searchInput" />
-            <input type="button" , onclick="add_search()" class="searchButton" />
+            <!-- <input type="text" class="searchInput" />
+            <input type="button" , onclick="add_search()" class="searchButton" /> -->
+            <!-- </div> -->
+            <form action="{% url 'search' %}" method="post">
+                {% csrf_token %}
+                <input type="text" name="searchInput" placeholder="Enter keyword">
+                <br>
+                <input type="radio" name="search_type" value="AND" id="and" checked>
+                <label for="and">AND</label>
+                <input type="radio" name="search_type" value="OR" id="or">
+                <label for="or">OR</label>
+                <br>
+                <input type="button" class="searchButton">
+            </form>
         </div>
 
         <div class="historyArea">
