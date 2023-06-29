@@ -9,6 +9,9 @@
     <link href="../static/css/style.css" rel="stylesheet" type="text/css" />
     <link href="../static/css/index.css" rel="stylesheet" type="text/css" />
     <link href="https://fonts.googleapis.com/css?family=Titillium+Web&display=swap" rel="stylesheet">
+    <!-- <link href="../static/css/index.css" rel="stylesheet" type="text/css" /> -->
+    <link href="{% static 'css/index.css' %}" rel="stylesheet" type="text/css" />
+
 </head>
 
 <body>
@@ -22,14 +25,15 @@
             <!-- </div> -->
             <form action="{% url 'search' %}" method="post">
                 {% csrf_token %}
-                <input type="text" name="searchInput" placeholder="Enter keyword">
+                <input type="text" name="searchInput" placeholder="Enter keyword" class="searchInput">
                 <br>
-                <input type="radio" name="search_type" value="AND" id="and" checked>
-                <label for="and">AND</label>
-                <input type="radio" name="search_type" value="OR" id="or">
-                <label for="or">OR</label>
+                <select name="search_type">
+                    <option value="AND">AND</option>
+                    <option value="OR">OR</option>
+                    <option value="NOT">NOT</option>
+                </select>
                 <br>
-                <input type="button" class="searchButton">
+                <input type="submit" class="searchButton">
             </form>
         </div>
 

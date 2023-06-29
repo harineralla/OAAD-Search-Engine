@@ -4,6 +4,7 @@ import pandas as pd
 import sqlite3
 from django.shortcuts import render
 from django.views import View
+from adminapp.models import QueryResult
 
 
 
@@ -45,17 +46,19 @@ class SearchView(View):
 
         query_result = pd.read_sql_query(query, conn, params=query_values)
 
+        query_result_dict = query_result.to_dict('records')  # Convert the DataFrame to a list of dictionaries
+        query_result_objs = [
+            QueryResult(
+                headings=row['headlines'],
+                short_description=row['short_description'],
+                url=row['url']
+            )
+            for row in query_result_dict
+        ]  # Create QueryResult objects for each record
+
+        QueryResult.objects.bulk_create(query_result_objs)  # Save all QueryResult objects in a single database query
+
         conn.close()
-         
-                # Save the query results to CSV
-        # query_result.to_csv('query_result.csv', index=False)
-
-        # # Save the query results to JSON
-        # with open('query_result.json', 'w') as file:
-        #     file.write(query_result)
-
-        # print(query_result)
-
 
         return render(request, self.template_name, {'query_result': query_result})
 
