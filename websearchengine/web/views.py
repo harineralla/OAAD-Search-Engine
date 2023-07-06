@@ -42,7 +42,10 @@ class SearchView(View):
             query = f"SELECT * FROM data_table WHERE {conditions}"
             query_values = tuple(f'%{value}%' for value in values)
         else:
-            return render(request, self.template_name, {'error_message': 'Invalid search type. Available search types: AND, OR'})
+            values = keyword.split()
+            conditions = "".join(["short_description LIKE ?"] * len(values))
+            query = f"SELECT * FROM data_table WHERE {conditions}"
+            query_values = tuple(f'%{value}%' for value in values)
 
         query_result = pd.read_sql_query(query, conn, params=query_values)
 
@@ -61,4 +64,3 @@ class SearchView(View):
         conn.close()
 
         return render(request, self.template_name, {'query_result': query_result})
-

@@ -51,6 +51,18 @@ body {
     font-weight:bold;
 }
 
+.drop_btn{
+  margin-left: 460px;
+  margin-right: 460px;
+}
+
+.search_container_style{
+  margin-left: 40px;
+  margin-right: 40px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
 .inputArea {
     position: relative;
     margin: 0 auto 40px auto;

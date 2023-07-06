@@ -133,3 +133,23 @@ body {
 .historyArea .history a {
     margin-right:12px;
 }
+
+
+.search_bar{
+  width: 750px;
+  margin-left: 200px;
+  margin-right: 200px;
+}
+
+.logo_cm{
+  margin-left: 350px;
+  margin-right: 350px;
+  margin-top: 25px;
+  width: 350px;
+  height: 300px;
+}
+
+.dropdown_menu{
+  margin-left: 460px;
+  margin-right: 460px;
+}

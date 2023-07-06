@@ -3,37 +3,77 @@
 <html>
 <head>
     <title>Search Results</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css">
 </head>
 <body>
+
+  <nav class="navbar" style="background-color: #e3f2fd;">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">
+      Cyberminer
+    </a>
+  </div>
+
+</nav>
+
+<br>
+<br>
     <div class="inputArea">
         <!-- <input type="text" class="searchInput" />
         <input type="button" , onclick="add_search()" class="searchButton" /> -->
         <!-- </div> -->
-        <form action="{% url 'search' %}" method="post">
-            {% csrf_token %}
-            <input type="text" name="searchInput" placeholder="Enter keyword" class="searchInput">
-            <br>
-            <select name="search_type">
-                <option value="AND">AND</option>
-                <option value="OR">OR</option>
-                <option value="NOT">NOT</option>
-            </select>
-            <br>
-            <input type="submit" class="searchButton">
+
+            <!-- <input type="text" name="searchInput" placeholder="Enter keyword" class="searchInput"> -->
+
+  <div class="container-sm">
+    <form action="{% url 'search' %}" method="post">
+        {% csrf_token %}
+    <div class="input-group mb-3 search_bar">
+      <input type="text" name="searchInput" class="form-control" placeholder="Enter keyword"  aria-describedby="button-addon1">
+      <button class="btn btn btn-info" type="submit" id="button-addon1">Search</button>
+      </div>
+
+
+          <div class="dropdown">
+          <button class="btn btn-outline-info dropdown-toggle drop_btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          Choose action
+          </button>
+          <ul class="dropdown-menu">
+          <li><a class="dropdown-item" name="search_type" value="AND" >AND</a></li>
+          <li><a class="dropdown-item" name="search_type" value="OR" >OR</a></li>
+            <li><a class="dropdown-item" name="search_type" value="OR" >NOT</a></li>
+          </ul>
+          </div>
+
         </form>
+
     </div>
-    <h1>Search Results</h1>
-    
-    {% if not query_result.empty %}
-        {% for _, result in query_result.iterrows %}
-            <div class="result">
-                <h2>{{ result.headlines }}</h2>
-                <p>{{ result.short_description }}</p>
-                <a href="{{ result.url }}">{{ result.url }}</a>
-            </div>
-        {% endfor %}
-    {% else %}
-        <p>No results found.</p>
-    {% endif %}
+</div>
+    <div class="container-md search_container_style">
+      <h5 class="search_container_style">Search Results</h5>
+
+      {% if not query_result.empty %}
+          {% for _, result in query_result.iterrows %}
+              <div class="result">
+                <table class="table">
+                  <h4>{{ result.headlines }}</h4>
+                    <a href="{{ result.url }}">{{ result.url }}</a>
+                  <p>{{ result.short_description }}</p>
+                    <br>
+                </table>
+                  <!-- <h4>{{ result.headlines }}</h4>
+                  <p>{{ result.short_description }}</p>
+                  <a href="{{ result.url }}">{{ result.url }}</a>
+                  <br> -->
+              </div>
+          {% endfor %}
+      {% else %}
+          <p>No results found.</p>
+      {% endif %}
+</div>
+
+
+
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
