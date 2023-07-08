@@ -145,3 +145,10 @@ body {
 .historyArea .history a {
     margin-right:12px;
 }
+
+.result-stats {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: Google Sans,Roboto,arial,sans-serif;
+}
