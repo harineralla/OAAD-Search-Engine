@@ -22,7 +22,8 @@ class SearchView(View):
     def post(self, request):
         keyword = request.POST.get('searchInput')
         search_type = request.POST.get('search_type')
-        sort_by = request.POST.get('sort_by')  # New - Get the sort_by parameter
+        # New - Get the sort_by parameter
+        sort_by = request.POST.get('sort_by')
 
         csv_path = os.path.join(os.path.dirname(__file__), 'news_summary1.csv')
         dataframe = pd.read_csv(csv_path, encoding='unicode_escape', header='infer', usecols=[
@@ -63,7 +64,7 @@ class SearchView(View):
         query_result_dict = query_result.to_dict('records')
         query_result_objs = [
             QueryResult(
-                headings=row['headlines'],
+                headlines=row['headlines'],
                 short_description=row['short_description'],
                 url=row['url']
             )
@@ -75,15 +76,15 @@ class SearchView(View):
 
         # Retrieve autocomplete suggestions from the database based on the keyword
         suggestions = QueryResult.objects.filter(
-            Q(headings__icontains=keyword) | Q(
+            Q(headlines__icontains=keyword) | Q(
                 short_description__icontains=keyword)
-        ).values_list('headings', flat=True)[:5]  # Change the field names as per your model
+        ).values_list('headlines', flat=True)[:5]  # Change the field names as per your model
 
         autocomplete_suggestions = list(suggestions)
 
         # Apply sorting based on the selected sort_by option
         if sort_by == 'alphabetical':
-            query_result_objs = QueryResult.objects.order_by('headings')
+            query_result_objs = QueryResult.objects.order_by('headlines')
         elif sort_by == 'frequently_accessed':
             query_result_objs = QueryResult.objects.order_by('-access_count')
         elif sort_by == 'payment':
@@ -92,12 +93,22 @@ class SearchView(View):
             # Default sorting (no specific order)
             query_result_objs = QueryResult.objects.all()
 
+
+        # Retrieve the values from QueryResult objects
+        query_result_values = list(query_result_objs.values('headlines', 'url', 'short_description'))
+
+        # Convert the list of dictionaries to a DataFrame
+        query_results = pd.DataFrame(query_result_values)[1:]
+
+        print(query_results)
+
         conn.close()
 
-        return render(request, self.template_name, {'query_result': query_result,
-                                                    'total_results': len(query_result_objs),
-                                                    'autocomplete_suggestions': autocomplete_suggestions,
-                                                    'query_result': query_result_objs})
+        return render(request, self.template_name, {
+            # 'query_result': query_result,
+            'total_results': len(query_result_objs),
+            'autocomplete_suggestions': autocomplete_suggestions,
+            'query_result': query_results})
 
     # def autocomplete(self, request):
     #     keyword = request.GET.get('keyword')

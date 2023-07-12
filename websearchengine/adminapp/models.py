@@ -5,9 +5,9 @@ from django.db import models
 # adminapp/models.py
 
 class QueryResult(models.Model):
-    headings = models.CharField(max_length=255)
+    headlines = models.CharField(max_length=255)
     short_description = models.TextField()
     url = models.URLField()
 
     def __str__(self):
-        return self.headings
+        return self.headlines
