@@ -33,7 +33,6 @@ class SearchView(View):
         conn = sqlite3.connect(':memory:')
         dataframe.to_sql('data_table', conn, index=False)
 
-        # breakpoint()
         if search_type == 'AND':
             values = keyword.split()
             conditions = " AND ".join(
@@ -48,13 +47,14 @@ class SearchView(View):
             query_values = tuple(f'%{value}%' for value in values)
         elif search_type == "NOT":
             values = keyword.split()
-            conditions = " NOT ".join(
-                ["short_description LIKE ?"] * len(values))
+            conditions = " AND ".join(
+                ["short_description NOT LIKE ?"] * len(values))
             query = f"SELECT * FROM data_table WHERE {conditions}"
             query_values = tuple(f'%{value}%' for value in values)
         else:
             values = keyword.split()
-            conditions = "".join(["short_description LIKE ?"] * len(values))
+            conditions = " AND ".join(
+                ["short_description LIKE ?"] * len(values))
             query = f"SELECT * FROM data_table WHERE {conditions}"
             query_values = tuple(f'%{value}%' for value in values)
 
@@ -93,9 +93,9 @@ class SearchView(View):
             # Default sorting (no specific order)
             query_result_objs = QueryResult.objects.all()
 
-
         # Retrieve the values from QueryResult objects
-        query_result_values = list(query_result_objs.values('headlines', 'url', 'short_description'))
+        query_result_values = list(query_result_objs.values(
+            'headlines', 'url', 'short_description'))
 
         # Convert the list of dictionaries to a DataFrame
         query_results = pd.DataFrame(query_result_values)[1:]
@@ -109,16 +109,3 @@ class SearchView(View):
             'total_results': len(query_result_objs),
             'autocomplete_suggestions': autocomplete_suggestions,
             'query_result': query_results})
-
-    # def autocomplete(self, request):
-    #     keyword = request.GET.get('keyword')
-
-    #     # Retrieve autocomplete suggestions from the database based on the keyword
-    #     suggestions = QueryResult.objects.filter(
-    #         Q(headings__icontains=keyword) | Q(
-    #             short_description__icontains=keyword)
-    #     ).values_list('headings', flat=True)[:5]  # Change the field names as per your model
-
-    #     autocomplete_suggestions = list(suggestions)
-
-    #     return render(request, 'search.html', {'autocomplete_suggestions': autocomplete_suggestions})
