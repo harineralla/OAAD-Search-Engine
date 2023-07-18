@@ -21,12 +21,6 @@
     <br>
     <br>
     <div class="inputArea">
-        <!-- <input type="text" class="searchInput" />
-        <input type="button" , onclick="add_search()" class="searchButton" /> -->
-        <!-- </div> -->
-
-        <!-- <input type="text" name="searchInput" placeholder="Enter keyword" class="searchInput"> -->
-
         <div class="container-sm">
             <form action="{% url 'search' %}" method="post">
                 {% csrf_token %}
@@ -35,25 +29,30 @@
                         aria-describedby="button-addon1">
                     <button class="btn btn btn-info" type="submit" id="button-addon1">Search</button>
                 </div>
-
-
-                <div class="dropdown">
-                    <select name="search_type" class="btn btn-outline-info dropdown-toggle heading_class" type="button"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <option value="AND">AND</option>
-                        <option value="OR">OR</option>
-                        <option value="NOT">NOT</option>
-                    </select>
-
-                    <select id="sortSelect" name="sort_by">
-                        <option value="">Sort By</option>
-                        <option value="alphabetical">Alphabetical</option>
-                        <option value="frequently_accessed">Most Frequently Accessed</option>
-                        <option value="payment">Per Payment</option>
-                    </select>
-                </div>
             </form>
-
+            <div class="row">
+                <div class="col-md-1">
+                    <form action="{% url 'search' %}" method="post">
+                        {% csrf_token %}
+                        <select name="search_type" class="btn btn-outline-info dropdown-toggle heading_class"
+                            type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <option value="AND">AND</option>
+                            <option value="OR">OR</option>
+                            <option value="NOT">NOT</option>
+                        </select>
+                    </form>
+                </div>
+                <div class="col-md-6">
+                    <form id="sortForm" action="{% url 'sort' %}" method="post">
+                        {% csrf_token %}
+                        <select id="sortSelect" name="sort_by"
+                            class="btn btn-outline-info dropdown-toggle heading_class" onchange="submitForm()">
+                            <option value="">Sort By</option>
+                            <option value="alphabetical">Alphabetical</option>
+                        </select>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
     <div class="result-stats" style="padding-bottom: 10px; padding-top: 10px; padding-left: 112px;">
@@ -71,10 +70,6 @@
                 <p>{{ result.short_description }}</p>
                 <br>
             </table>
-            <!-- <h4>{{ result.headlines }}</h4>
-                  <p>{{ result.short_description }}</p>
-                  <a href="{{ result.url }}">{{ result.url }}</a>
-                  <br> -->
         </div>
         {% endfor %}
         {% else %}
@@ -88,6 +83,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
 
+    <script>
+        function submitForm() {
+            document.getElementById("sortForm").submit();
+        }
+    </script>
     <script>
         $(document).ready(function () {
             $("#searchInput").select2({
