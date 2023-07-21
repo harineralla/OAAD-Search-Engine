@@ -13,6 +13,87 @@
     <link href="{% static 'css/index.css' %}" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css">
 </head>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+<style>
+    /* CSS for the About Us Modal */
+
+    /* Styling for the modal overlay */
+    .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.5);
+        /* Change the background color and opacity */
+    }
+
+    /* Styling for the modal dialog */
+    .modal-dialog {
+        max-width: 600px;
+        /* Adjust the maximum width of the modal */
+    }
+
+    /* Styling for the modal content */
+    .modal-content {
+        background-color: #f8f9fa;
+        /* Change the background color of the modal */
+        border-radius: 10px;
+        /* Adjust the border radius of the modal */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        /* Add a shadow effect to the modal */
+    }
+
+    /* Styling for the modal header */
+    .modal-header {
+        background-color: #007bff;
+        /* Change the background color of the header */
+        color: #fff;
+        /* Change the text color of the header */
+        border-radius: 10px 10px 0 0;
+        /* Adjust the border radius of the header */
+    }
+
+    /* Styling for the modal title */
+    .modal-title {
+        font-weight: bold;
+        /* Make the title bold */
+    }
+
+    /* Styling for the modal body */
+    .modal-body {
+        padding: 20px;
+        /* Add some padding inside the modal body */
+        font-size: 16px;
+        /* Adjust the font size of the content */
+        line-height: 1.6;
+        /* Adjust the line height of the content */
+    }
+
+    /* Styling for the modal footer */
+    .modal-footer {
+        justify-content: center;
+        /* Center the buttons inside the footer */
+        border-radius: 0 0 10px 10px;
+        /* Adjust the border radius of the footer */
+    }
+
+    /* Styling for the close button in the modal header */
+    .modal-header .close {
+        color: #fff;
+        /* Change the text color of the close button */
+    }
+
+    /* Additional styling for the close button when hovered */
+    .modal-header .close:hover {
+        color: #f8f9fa;
+        /* Change the text color when hovered */
+        background-color: transparent;
+        /* Remove the background color when hovered */
+    }
+
+    /* Optional: Styling for the modal body paragraphs */
+    .modal-body p {
+        margin-bottom: 15px;
+        /* Add some space between paragraphs */
+    }
+</style>
 
 <body>
 
@@ -21,7 +102,9 @@
         <div class="container-fluid">
             <ul class="nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="#" data-toggle="modal" data-target="#aboutUsModal">About Us</a>
+                    <a class="nav-link" data-toggle="modal" data-target="#aboutUsModal" id="aboutUsLink">
+                        About Us
+                    </a>
                 </li>
             </ul>
         </div>
@@ -45,7 +128,8 @@
                         search engine can help you find it quickly and efficiently.
                     </p>
                     <p>
-                        We use advanced algorithms and indexing techniques to ensure that our search results are accurate
+                        We use advanced algorithms and indexing techniques to ensure that our search results are
+                        accurate
                         and up to date. Our team of dedicated developers and engineers is constantly working to improve
                         our search engine and provide you with the best user experience possible.
                     </p>
@@ -62,67 +146,92 @@
         </div>
     </div>
 
-        <div class="container-sm">
+    <div class="container-sm">
 
-            <img class="logo_cm" src="static/img/cyberminer_logo.png" alt="">
-            <form action="{% url 'search' %}" method="post">
-                {% csrf_token %}
+        <img class="logo_cm" src="static/img/cyberminer_logo.png" alt="">
+        <form action="{% url 'search' %}" method="post">
+            {% csrf_token %}
 
-                <div class="search_bar">
-                    <div class="input-group mb-3">
-                        <input type="text" name="searchInput" class="form-control" placeholder="Enter keyword"
-                            aria-describedby="button-addon1">
-                        <button class="btn btn btn-info" type="submit" id="button-addon1">Search</button>
-                    </div>
+            <div class="search_bar">
+                <div class="input-group mb-3">
+                    <input type="text" name="searchInput" class="form-control" placeholder="Enter keyword"
+                        aria-describedby="button-addon1">
+                    <button class="btn btn btn-info" type="submit" id="button-addon1">Search</button>
                 </div>
+            </div>
 
-                <div class="dropdown_menu">
-                    <div class="dropdown">
-                        <select name="search_type" class="btn btn-outline-info dropdown-toggle heading_class"
-                            type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <option value="AND">AND</option>
-                            <option value="OR">OR</option>
-                            <option value="NOT">NOT</option>
-                        </select>
-                    </div>
+            <div class="dropdown_menu">
+                <div class="dropdown">
+                    <select name="search_type" class="btn btn-outline-info dropdown-toggle heading_class" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <option value="AND">AND</option>
+                        <option value="OR">OR</option>
+                        <option value="NOT">NOT</option>
+                    </select>
                 </div>
-            </form>
-        </div>
-        <br>
-        <br>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-        <script>
-            $(document).ready(function () {
-                $("#searchInput").on("input", function () {
-                    var keyword = $(this).val();
+            </div>
+        </form>
+    </div>
+    <br>
+    <br>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#searchInput").on("input", function () {
+                var keyword = $(this).val();
 
-                    $.ajax({
-                        url: "/autocomplete/",
-                        method: "GET",
-                        data: { keyword: keyword },
-                        success: function (data) {
-                            var autocompleteList = $("#autocompleteList");
-                            autocompleteList.empty();
+                $.ajax({
+                    url: "/autocomplete/",
+                    method: "GET",
+                    data: { keyword: keyword },
+                    success: function (data) {
+                        var autocompleteList = $("#autocompleteList");
+                        autocompleteList.empty();
 
-                            $.each(data, function (index, item) {
-                                var listItem = $("<li>").text(item);
-                                autocompleteList.append(listItem);
-                            });
+                        $.each(data, function (index, item) {
+                            var listItem = $("<li>").text(item);
+                            autocompleteList.append(listItem);
+                        });
 
-                            autocompleteList.show();
-                        }
-                    });
-                });
-
-                $("#autocompleteList").on("click", "li", function () {
-                    var selectedSuggestion = $(this).text();
-                    $("#searchInput").val(selectedSuggestion);
-                    $("#autocompleteList").hide();
+                        autocompleteList.show();
+                    }
                 });
             });
-        </script>
+
+            $("#autocompleteList").on("click", "li", function () {
+                var selectedSuggestion = $(this).text();
+                $("#searchInput").val(selectedSuggestion);
+                $("#autocompleteList").hide();
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+            // Open the "About Us" modal when clicking the "About Us" link
+            $("#aboutUsLink").click(function () {
+                $("#aboutUsModal").modal("show");
+            });
+
+            // Function to close the "About Us" modal
+            function closeModal() {
+                $("#aboutUsModal").modal("hide");
+            }
+
+            // Close the modal when the close button inside the modal header is clicked
+            $(".modal-header .close").click(function () {
+                closeModal();
+            });
+
+            // Close the modal when the user clicks anywhere outside of the modal
+            $(window).click(function (event) {
+                if (event.target == document.getElementById("aboutUsModal")) {
+                    closeModal();
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
