@@ -1,13 +1,11 @@
 import os
 import re
 import pandas as pd
-import sqlite3
 from django.shortcuts import render
 from django.views import View
 from adminapp.models import QueryResult
 from django.http import JsonResponse
 from django.db.models import Q
-from adminapp.models import QueryResult
 
 
 def is_valid_url(url):
@@ -20,34 +18,42 @@ def index(request):
     return render(request, "index.html")
 
 
-def perform_search(query_values, conditions):
+def search_results(keywords, search_type):
     csv_path = os.path.join(os.path.dirname(__file__), 'news_summary1.csv')
     dataframe = pd.read_csv(csv_path, encoding='unicode_escape', header='infer', usecols=[
                             'headlines', 'url', 'short_description'])
-    conn = sqlite3.connect(':memory:')
-    dataframe.to_sql('data_table', conn, index=False)
 
-    query = f"SELECT * FROM data_table WHERE {conditions}"
-    query_result = pd.read_sql_query(query, conn, params=query_values)
+    if search_type == 'AND':
+        values = keywords.split(" ")
+        q_objects = Q()
+        for value in values:
+            q_objects &= Q(short_description__icontains=value)
+    elif search_type == 'OR':
+        values = keywords.split(" ")
+        q_objects = Q()
+        for value in values:
+            q_objects |= Q(short_description__icontains=value)
+    elif search_type == "NOT":
+        values = keywords.split(" ")
+        q_objects = ~Q()
+        for value in values:
+            q_objects &= ~Q(short_description__icontains=value)
+    else:
+        values = keywords.split(" ")
+        q_objects = Q()
+        for value in values:
+            q_objects &= Q(short_description__icontains=value)
 
-    # Convert the DataFrame to a list of dictionaries
-    query_result_dict = query_result.to_dict('records')
-    query_result_objs = [
-        QueryResult(
-            headlines=row['headlines'],
-            short_description=row['short_description'],
-            url=row['url']
-        )
-        for row in query_result_dict
-    ]  # Create QueryResult objects for each record
+    query_result_objs = QueryResult.objects.filter(q_objects).order_by('headlines')
 
-    # Save all QueryResult objects in a single database query
-    QueryResult.objects.bulk_create(query_result_objs)
+    valid_query_result = []
+    urls_seen = set()
+    for row in query_result_objs:
+        if row.url not in urls_seen and is_valid_url(row.url):
+            valid_query_result.append(row)
+            urls_seen.add(row.url)
 
-    # Close the connection
-    conn.close()
-
-    return query_result_objs
+    return valid_query_result
 
 
 class SearchView(View):
@@ -57,69 +63,60 @@ class SearchView(View):
         return render(request, self.template_name)
 
     def post(self, request):
-        keywords = request.POST.getlist('searchInput')
+        keywords = request.POST.get('searchInput')
         search_type = request.POST.get('search_type')
 
-        # New - Get the page number from the request
-        page_number = request.POST.get('page')
+        # Clear the database before adding new search results
+        QueryResult.objects.all().delete()
 
-        # Perform the search
-        conditions = None
-        for keyword in keywords:
-            if search_type == 'AND':
-                operator = "AND"
-                condition = f"short_description LIKE ?"
-            elif search_type == 'OR':
-                operator = "OR"
-                condition = f"short_description LIKE ?"
-            elif search_type == "NOT":
-                operator = "AND"
-                condition = f"NOT short_description LIKE ?"
-            else:
-                operator = "AND"
-                condition = f"short_description LIKE ?"
+        valid_query_result = search_results(keywords, search_type)
 
-            keyword_condition = f"{operator} {condition}"
-            query_values = tuple(f'%{keyword}%' for keyword in keywords)
-            if conditions is None:
-                conditions = keyword_condition
-            else:
-                conditions += f" {keyword_condition}"
+        query_result_objs = [
+            QueryResult(
+                headlines=row.headlines,
+                short_description=row.short_description,
+                url=row.url
+            )
+            for row in valid_query_result
+        ]  # Create QueryResult objects for each valid record
 
-        # Perform the search and get the results
-        query_result_objs = perform_search(query_values, conditions)
+        # Save all QueryResult objects in a single database query
+        QueryResult.objects.bulk_create(query_result_objs)
 
-        # Retrieve autocomplete suggestions from the database based on the keyword
-        suggestions = QueryResult.objects.filter(
-            Q(headlines__in=keywords) | Q(
-                short_description__in=keywords)
-        ).values_list('headlines', flat=True)[:5]
+        query_result_objs = QueryResult.objects.all()
 
-        autocomplete_suggestions = list(suggestions)
+        # Retrieve the values from QueryResult objects
+        query_result_values = list(query_result_objs.values(
+            'headlines', 'url', 'short_description'))
+
+        # Convert the list of dictionaries to a DataFrame
+        query_results = pd.DataFrame(query_result_values)[1:]
 
         return render(request, self.template_name, {
             'total_results': len(query_result_objs),
-            'autocomplete_suggestions': autocomplete_suggestions,
-            'query_result': query_result_objs})
-    
+            'query_result': query_results})
 
-def sort_results(request):
-    sort_by = request.POST.get('sort_by')
-    keyword = request.POST.get('keyword')
-    
-    # Get the search results based on the keyword
-    conditions = "short_description LIKE ?"
-    query_values = tuple(f'%{keyword}%' for _ in range(1))
-    query_result_objs = perform_search(query_values, conditions)
+    def sort_query_results(self, request):
+        keywords = request.POST.get('searchInput')
+        search_type = request.POST.get('search_type')
+        sort_by = request.POST.get('sort_by')
 
-    # Apply sorting based on the selected sort_by option
-    if sort_by == 'alphabetical':
-        query_result_objs = sorted(query_result_objs, key=lambda x: x.headlines)
-    elif sort_by == 'frequently_accessed':
-        query_result_objs = sorted(query_result_objs, key=lambda x: x.access_count, reverse=True)
-    elif sort_by == 'payment':
-        query_result_objs = sorted(query_result_objs, key=lambda x: x.payment_amount, reverse=True)
+        valid_query_result = search_results(keywords, search_type)
 
-    return render(request, 'search.html', {
-        'total_results': len(query_result_objs),
-        'query_result': query_result_objs})
+        if sort_by == 'alphabetical':
+            valid_query_result = sorted(
+                valid_query_result, key=lambda x: x.headlines)
+        else:
+            # Default sorting (no specific order)
+            pass
+
+        query_result_values = list(valid_query_result.values(
+            'headlines', 'url', 'short_description'))
+
+        # Convert the list of dictionaries to a DataFrame
+        query_results = pd.DataFrame(query_result_values)[1:]
+
+        return JsonResponse({
+            'total_results': len(valid_query_result),
+            'query_result': query_results.to_dict('records')
+        })

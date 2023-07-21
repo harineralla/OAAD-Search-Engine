@@ -24,11 +24,12 @@
         <div class="container-sm">
             <form action="{% url 'search' %}" method="post">
                 {% csrf_token %}
-                <div class="input-group mb-3 search_bar">
+                <div class="input-group mb-3">
                     <input type="text" name="searchInput" class="form-control" placeholder="Enter keyword"
-                        aria-describedby="button-addon1">
+                        aria-describedby="button-addon1" id="searchInput">
                     <button class="btn btn btn-info" type="submit" id="button-addon1">Search</button>
                 </div>
+                <ul id="autocompleteList" class="autocomplete-list"></ul>
             </form>
             <div class="row">
                 <div class="col-md-1">
@@ -42,25 +43,26 @@
                         </select>
                     </form>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6" style="width: 180px">
                     <form id="sortForm" action="{% url 'sort' %}" method="post">
                         {% csrf_token %}
                         <select id="sortSelect" name="sort_by"
                             class="btn btn-outline-info dropdown-toggle heading_class" onchange="submitForm()">
                             <option value="">Sort By</option>
                             <option value="alphabetical">Alphabetical</option>
+                            <option value="access_frequency">Most Frequently accessed</option>
+                            <option value="payment">According to payment</option>
                         </select>
                     </form>
+                </div>
+                <div class="col-md-11" style="padding-left: 90px;padding-top: 10px;padding-right: 0px;width: 207px;">
+                    About {{ total_results }} results
                 </div>
             </div>
         </div>
     </div>
-    <div class="result-stats" style="padding-bottom: 10px; padding-top: 10px; padding-left: 112px;">
-        About {{ total_results }} results
-    </div>
     <div class="container-md search_container_style">
-        <h5 class="search_container_style">Search Results</h5>
-
+        <h5 class="search_container_style" style="padding-top: 20px;padding-bottom: 10px;">Search Results</h5>
         {% if not query_result.empty %}
         {% for _, result in query_result.iterrows %}
         <div class="result">
@@ -88,26 +90,63 @@
             document.getElementById("sortForm").submit();
         }
     </script>
+    <style>
+        #autocompleteList {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            border: 1px solid #ccc;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        #autocompleteList li {
+            padding: 5px;
+            cursor: pointer;
+            background-color: #f9f9f9;
+        }
+
+        #autocompleteList li:hover {
+            background-color: #e9e9e9;
+        }
+    </style>
     <script>
         $(document).ready(function () {
-            $("#searchInput").select2({
-                ajax: {
-                    url: "/search/",
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) {
-                        return {
-                            keyword: params.term
-                        };
-                    },
-                    processResults: function (data) {
-                        return {
-                            results: data
-                        };
-                    },
-                    cache: true
-                },
-                minimumInputLength: 1
+            $("#searchInput").on("input", function () {
+                var keyword = $(this).val();
+
+                $.ajax({
+                    url: "{% url 'search' %}?keyword=" + keyword + "&autocomplete=true",
+                    method: "GET",
+                    success: function (data) {
+                        var autocompleteList = $("#autocompleteList");
+                        autocompleteList.empty();
+
+                        $.each(data, function (index, item) {
+                            var listItem = $("<li>").text(item);
+                            autocompleteList.append(listItem);
+                        });
+
+                        if (data.length > 0) {
+                            autocompleteList.show();
+                        } else {
+                            autocompleteList.hide();
+                        }
+                    }
+                });
+            });
+
+            $("#autocompleteList").on("click", "li", function () {
+                var selectedSuggestion = $(this).text();
+                $("#searchInput").val(selectedSuggestion);
+                $("#autocompleteList").hide();
+            });
+
+            // Hide the autocomplete list when clicking outside of it
+            $(document).on("click", function (event) {
+                if (!$(event.target).closest("#autocompleteList").length && !$(event.target).is("#searchInput")) {
+                    $("#autocompleteList").hide();
+                }
             });
         });
     </script>
