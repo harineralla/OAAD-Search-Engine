@@ -12,99 +12,117 @@
     <!-- <link href="../static/css/index.css" rel="stylesheet" type="text/css" /> -->
     <link href="{% static 'css/index.css' %}" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css">
-
 </head>
 
 <body>
 
+    <!-- Navigation Bar -->
     <nav class="navbar" style="background-color: #e3f2fd;">
         <div class="container-fluid">
-            <br>
-            <br>
+            <ul class="nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-toggle="modal" data-target="#aboutUsModal">About Us</a>
+                </li>
+            </ul>
         </div>
-
     </nav>
-    <!-- <div id="main"> -->
 
-    <div class="container-sm">
-
-        <img class="logo_cm" src="static/img/cyberminer_logo.png" alt="">
-        <form action="{% url 'search' %}" method="post">
-            {% csrf_token %}
-
-            <div class="search_bar">
-                <div class="input-group mb-3">
-                    <input type="text" name="searchInput" class="form-control" placeholder="Enter keyword"
-                        aria-describedby="button-addon1">
-                    <button class="btn btn btn-info" type="submit" id="button-addon1">Search</button>
-                </div>
-            </div>
-
-            <div class="dropdown_menu">
-                <div class="dropdown">
-                    <select name="search_type" class="btn btn-outline-info dropdown-toggle heading_class" type="button"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <option value="AND">AND</option>
-                        <option value="OR">OR</option>
-                        <option value="NOT">NOT</option>
-                    </select>
-                    <!-- <button class="btn btn-outline-info dropdown-toggle heading_class" type="button"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        Choose action
+    <!-- About Us Modal -->
+    <div class="modal fade" id="aboutUsModal" tabindex="-1" role="dialog" aria-labelledby="aboutUsModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="aboutUsModalLabel">About Us</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
                     </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" name="search_type" value="AND">AND</a></li>
-                        <li><a class="dropdown-item" name="search_type" value="OR">OR</a></li>
-                        <li><a class="dropdown-item" name="search_type" value="not">NOT</a></li>
-                    </ul> -->
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Our search engine is designed to provide you with fast and relevant search results for the
+                        information you need. Whether you are looking for news, articles, or any other content, our
+                        search engine can help you find it quickly and efficiently.
+                    </p>
+                    <p>
+                        We use advanced algorithms and indexing techniques to ensure that our search results are accurate
+                        and up to date. Our team of dedicated developers and engineers is constantly working to improve
+                        our search engine and provide you with the best user experience possible.
+                    </p>
+                    <p>
+                        Thank you for using our search engine. If you have any feedback or suggestions, please feel free
+                        to contact us. We value your input and are always looking for ways to enhance your search
+                        experience.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
-        </form>
+        </div>
     </div>
-    <br>
-    <br>
-    <!-- <div class="historyArea">
-            <p class="history">
-                <label>Popular：</label>
-            </p>
-            <p class="history mysearch">
-                <label>Recent：</label>
-            </p>
-        </div> -->
-    <!-- </div> -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $("#searchInput").on("input", function () {
-                var keyword = $(this).val();
 
-                $.ajax({
-                    url: "/autocomplete/",
-                    method: "GET",
-                    data: { keyword: keyword },
-                    success: function (data) {
-                        var autocompleteList = $("#autocompleteList");
-                        autocompleteList.empty();
+        <div class="container-sm">
 
-                        $.each(data, function (index, item) {
-                            var listItem = $("<li>").text(item);
-                            autocompleteList.append(listItem);
-                        });
+            <img class="logo_cm" src="static/img/cyberminer_logo.png" alt="">
+            <form action="{% url 'search' %}" method="post">
+                {% csrf_token %}
 
-                        autocompleteList.show();
-                    }
+                <div class="search_bar">
+                    <div class="input-group mb-3">
+                        <input type="text" name="searchInput" class="form-control" placeholder="Enter keyword"
+                            aria-describedby="button-addon1">
+                        <button class="btn btn btn-info" type="submit" id="button-addon1">Search</button>
+                    </div>
+                </div>
+
+                <div class="dropdown_menu">
+                    <div class="dropdown">
+                        <select name="search_type" class="btn btn-outline-info dropdown-toggle heading_class"
+                            type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <option value="AND">AND</option>
+                            <option value="OR">OR</option>
+                            <option value="NOT">NOT</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <br>
+        <br>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                $("#searchInput").on("input", function () {
+                    var keyword = $(this).val();
+
+                    $.ajax({
+                        url: "/autocomplete/",
+                        method: "GET",
+                        data: { keyword: keyword },
+                        success: function (data) {
+                            var autocompleteList = $("#autocompleteList");
+                            autocompleteList.empty();
+
+                            $.each(data, function (index, item) {
+                                var listItem = $("<li>").text(item);
+                                autocompleteList.append(listItem);
+                            });
+
+                            autocompleteList.show();
+                        }
+                    });
+                });
+
+                $("#autocompleteList").on("click", "li", function () {
+                    var selectedSuggestion = $(this).text();
+                    $("#searchInput").val(selectedSuggestion);
+                    $("#autocompleteList").hide();
                 });
             });
-
-            $("#autocompleteList").on("click", "li", function () {
-                var selectedSuggestion = $(this).text();
-                $("#searchInput").val(selectedSuggestion);
-                $("#autocompleteList").hide();
-            });
-        });
-    </script>
+        </script>
 </body>
 
 </html>
