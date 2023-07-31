@@ -15,7 +15,6 @@
                 Cyberminer
             </a>
         </div>
-
     </nav>
 
     <br>
@@ -61,10 +60,11 @@
             </div>
         </div>
     </div>
+
     <div class="container-md search_container_style">
         <h5 class="search_container_style" style="padding-top: 20px;padding-bottom: 10px;">Search Results</h5>
-        {% if not query_result.empty %}
-        {% for _, result in query_result.iterrows %}
+        {% if query_result %}
+        {% for result in query_result %}
         <div class="result">
             <table class="table">
                 <h4>{{ result.headlines }}</h4>
@@ -74,6 +74,27 @@
             </table>
         </div>
         {% endfor %}
+
+        <!-- Pagination links -->
+        <!-- Pagination links -->
+<div class="pagination">
+    <span class="step-links">
+        {% if query_result.has_previous %}
+        <a href="?page=1">&laquo; first</a>
+        <a href="?page={{ query_result.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ query_result.number }} of {{ paginator.num_pages }}.
+        </span>
+
+        {% if query_result.has_next %}
+        <a href="?page={{ query_result.next_page_number }}">next</a>
+        <a href="?page={{ paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+
         {% else %}
         <p>No results found.</p>
         {% endif %}

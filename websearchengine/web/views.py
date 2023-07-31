@@ -1,15 +1,19 @@
 import os
 import re
+import json
+from django.http import JsonResponse
 import pandas as pd
-import sqlite3
 from django.shortcuts import render
 from django.views import View
 from adminapp.models import QueryResult
-from django.http import JsonResponse
-from django.db.models import Q
-from adminapp.models import QueryResult
+from django.core.paginator import Paginator
+from django.conf import settings
 
-global keyword_results
+# Read the CSV file only once during the initialization of the view
+csv_path = os.path.join(os.path.dirname(__file__), 'news_summary1.csv')
+dataframe = pd.read_csv(csv_path, encoding='unicode_escape', header='infer', usecols=[
+                        'headlines', 'url', 'short_description'])
+headlines_list = dataframe['headlines'].tolist()
 
 
 def is_valid_url(url):
@@ -18,14 +22,10 @@ def is_valid_url(url):
     return bool(re.match(pattern, url))
 
 
-def index(request):
-    return render(request, "index.html")
-
-
 class SearchView(View):
     template_name = 'search.html'
-
-    # Define a set of symbols to filter out (customize as needed)
+    items_per_page = 10
+    template_name = 'search.html'
     FILTER_SYMBOLS = set("!@#$%^&*()_+-=[]{};:'\"<>,.?/\\|")
 
     def get(self, request):
@@ -36,51 +36,53 @@ class SearchView(View):
         search_type = request.POST.get('search_type')
         is_autocomplete = request.GET.get('autocomplete')
 
-        # Remove non-meaningful symbols from the keywords
         keywords = self.filter_symbols(keywords)
+        query_results = self.perform_search(dataframe, keywords, search_type)
+        self.clear_and_save_results(query_results)
 
-        csv_path = os.path.join(os.path.dirname(__file__), 'news_summary1.csv')
-        dataframe = pd.read_csv(csv_path, encoding='unicode_escape', header='infer', usecols=[
-                                'headlines', 'url', 'short_description'])
-        # dataframe = pd.read_csv('news_summary1.csv', encoding='unicode_escape', header='infer', usecols=['headlines', 'url', 'short_description'])
+        # Explicitly call the render_results method to handle pagination.
+        return self.render_results(request)
 
-        conn = sqlite3.connect(':memory:')
-        dataframe.to_sql('data_table', conn, index=False)
+    def render_results(self, request):
+        query_results = QueryResult.objects.all()
 
-        # Clear the database before adding new search results
-        QueryResult.objects.all().delete()
+        paginator = Paginator(query_results, self.items_per_page)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        return render(request, self.template_name, {
+            'total_results': paginator.count,
+            'query_result': page_obj,
+            'paginator': paginator
+        })
+
+    def perform_search(self, dataframe, keywords, search_type):
+        # The search logic remains the same as before
+        values = keywords.split()
+        conditions = r"\s+&\s+".join(values)  # For 'AND'
+        or_conditions = r"\s+\|\s+".join(values)  # For 'OR'
 
         if search_type == 'AND':
-            values = keywords.split(" ")
-            conditions = " AND ".join(
-                ["short_description LIKE ?"] * len(values))
-            query = f"SELECT * FROM data_table WHERE {conditions}"
-            query_values = tuple(f'%{value}%' for value in values)
+            query_results = dataframe[dataframe['short_description'].str.contains(
+                conditions, regex=True, case=False)]
         elif search_type == 'OR':
-            values = keywords.split(" ")
-            conditions = " OR ".join(
-                ["short_description LIKE ?"] * len(values))
-            query = f"SELECT * FROM data_table WHERE {conditions}"
-            query_values = tuple(f'%{value}%' for value in values)
+            query_results = dataframe[dataframe['short_description'].str.contains(
+                or_conditions, regex=True, case=False)]
         elif search_type == "NOT":
-            values = keywords.split(" ")
-            conditions = " AND ".join(
-                ["short_description NOT LIKE ?"] * len(values))
-            query = f"SELECT * FROM data_table WHERE {conditions}"
-            query_values = tuple(f'%{value}%' for value in values)
+            not_conditions = ~dataframe['short_description'].str.contains(
+                or_conditions, regex=True, case=False)
+            query_results = dataframe[not_conditions]
         else:
-            values = keywords.split(" ")
-            conditions = " AND ".join(
-                ["short_description LIKE ?"] * len(values))
-            query = f"SELECT * FROM data_table WHERE {conditions}"
-            query_values = tuple(f'%{value}%' for value in values)
+            query_results = dataframe[dataframe['short_description'].str.contains(
+                conditions, regex=True, case=False)]
 
-        query_result = pd.read_sql_query(query, conn, params=query_values)
+        return query_results
 
-        # Convert the DataFrame to a list of dictionaries
-        query_result_dict = query_result.drop_duplicates(
+    def clear_and_save_results(self, query_results):
+        QueryResult.objects.all().delete()
+
+        query_result_dict = query_results.drop_duplicates(
             subset=['headlines']).to_dict('records')
-        # query_result_dict = query_result.to_dict('records')
         query_result_objs = [
             QueryResult(
                 headlines=row['headlines'],
@@ -88,75 +90,45 @@ class SearchView(View):
                 url=row['url']
             )
             for row in query_result_dict
-        ]  # Create QueryResult objects for each record
+        ]
 
-        if is_autocomplete:  # If it's an autocomplete request, return suggestions
-            suggestions = [result.headlines for result in query_result_objs if keywords.lower() in result.headlines.lower()]
-            return JsonResponse(suggestions, safe=False)
-
-        # # Filter out invalid URLs before saving to the database
-        # valid_query_result = []
-        # for row in query_result_dict:
-        #     if is_valid_url(row['url']):
-        #         valid_query_result.append(row)
-        
-        # print(valid_query_result)
-
-        # query_result_objs = [
-        #     QueryResult(
-        #         headlines=row['headlines'],
-        #         short_description=row['short_description'],
-        #         url=row['url']
-        #     )
-        #     for row in valid_query_result
-        # ]  # Create QueryResult objects for each valid record
-
-        # Save all QueryResult objects in a single database query
         QueryResult.objects.bulk_create(query_result_objs)
 
-        query_result_objs = QueryResult.objects.all()
-
-        # Retrieve the values from QueryResult objects
-        query_result_values = list(query_result_objs.values(
-            'headlines', 'url', 'short_description'))
-
-        # Convert the list of dictionaries to a DataFrame
-        query_results = pd.DataFrame(query_result_values)
-
-        global keyword_results
-        keyword_results = query_result_objs
-
-        conn.close()
-
-        return render(request, self.template_name, {
-            'total_results': len(query_result_objs),
-            'query_result': query_results})
+    def filter_symbols(self, text):
+        return ''.join(char for char in text if char not in self.FILTER_SYMBOLS)
 
     @staticmethod
     def sort_query_results(request):
-        global keyword_results
         sort_by = request.POST.get("sort_by")
 
         if sort_by == 'alphabetical':
-            query_result_objs = QueryResult.objects.order_by('headlines')
-        elif sort_by == 'accessed':
-            query_result_objs = QueryResult.objects.order_by('-access_frequency')
+            query_results = QueryResult.objects.order_by('headlines')
+        elif sort_by == 'access_frequency':
+            query_results = QueryResult.objects.order_by('-access_frequency')
         elif sort_by == 'payment':
-            query_result_objs = QueryResult.objects.order_by('payment')
+            query_results = QueryResult.objects.order_by('payment')
         else:
-            # Default sorting (no specific order)
-            query_result_objs = QueryResult.objects.all()
+            query_results = QueryResult.objects.all()
 
-        query_result_values = list(query_result_objs.values(
-            'headlines', 'url', 'short_description'))
-
-        # Convert the list of dictionaries to a DataFrame
-        query_results = pd.DataFrame(query_result_values)[1:]
+        paginator = Paginator(query_results, SearchView.items_per_page)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
 
         return render(request, 'search.html', {
-            'total_results': len(query_result_objs),
-            'query_result': query_results})
-    
-    def filter_symbols(self, text):
-        # Remove the specified symbols from the input text
-        return ''.join(char for char in text if char not in self.FILTER_SYMBOLS)
+            'total_results': paginator.count,
+            'query_result': page_obj,
+            'paginator': paginator
+        })
+
+
+def index(request):
+    headlines_json = json.dumps(headlines_list)
+    return render(request, "index.html", {"headlines_json": headlines_json})
+
+
+def get_headlines(request):
+    file_path = os.path.join(settings.BASE_DIR, 'data', 'headlines.json')
+    with open(file_path, 'r') as file:
+        data = json.load(file)
+    return JsonResponse(data, safe=False)
+    # return JsonResponse({'message': 'This view is accessible.'})
