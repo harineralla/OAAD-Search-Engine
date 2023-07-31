@@ -178,7 +178,10 @@
             <div class="search_bar">
                 <div class="input-group mb-3">
                     <div class="resultBox">
-                        <!-- here list are inserted from javascript -->
+                      <ul class="list-group autofillList">
+                          <!-- here list are inserted from javascript -->
+                      </ul>
+
                     </div>
                 </div>
             </div>
@@ -217,25 +220,33 @@
                     $(".form-control").on("input", function () {
                         var keyword = $(this).val();
                         console.log(keyword);
-                        var autocompleteList = $(".resultBox");
-                        autocompleteList.empty();
 
                         // Use slice to get the first 10 headlines
-                        var headlinesToShow = headlines_list.slice(0, 10);
+                        if(keyword!=""){
+                        var headlinesToShow = headlines_list.slice(0,5000);
+                        var autocompleteList = $(".autofillList");
+                        autocompleteList.empty();
+                        headlinesToShow.forEach((item, i) => {
+                        if(item.includes(keyword)){
+                          var listItem = $('<li  class="list-group-item">').text(item);
+                          autocompleteList.append(listItem);
+                        }
 
-                        $.each(headlinesToShow, function (index, item) {
-                            var listItem = $('<li>').text(item);
-                            autocompleteList.append(listItem);
                         });
 
                         autocompleteList.show();
+                    }
+
+                    else{
+                      $(".autofillList").hide();
+                    }
                     });
 
                     $(".resultBox").on("click", "li", function () {
                         var selectedSuggestion = $(this).text();
                         console.log(selectedSuggestion);
                         $("#searchInput").val(selectedSuggestion);
-                        $(".resultBox").hide();
+                        $(".autofillList").hide();
                     });
                 })
                 .catch(error => {
