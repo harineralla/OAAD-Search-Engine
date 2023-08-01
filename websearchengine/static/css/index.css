@@ -20,13 +20,13 @@ body {
     margin-top: 15%;
 }
 
-.logo.large {
+/* .logo.large {
     margin: 10px auto;
     width: 272px;
     height: 92px;
     background: url(../img/home_page_logo.jpg) no-repeat center center;
     background-size: contain;
-}
+} */
 
 .nav {
     margin-bottom: 10px;
@@ -146,8 +146,14 @@ body {
   margin-right: 350px;
   margin-top: 25px;
   width: 350px;
-  height: 300px;
+  height: 250px;
 }
+/* .my-image-class{
+  margin-left: 4000px;
+  margin-right: 400px;
+  margin-top: 25px;
+  height: 375px
+} */
 
 .dropdown_menu{
   margin-left: 460px;

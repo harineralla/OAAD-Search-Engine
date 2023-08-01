@@ -9,7 +9,6 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
-
 </head>
 
 <body>
@@ -20,7 +19,6 @@
                 Cyberminer
             </a>
         </div>
-
     </nav>
 
     <br>
@@ -40,6 +38,7 @@
                   </ul>
 
                 </div>
+
             </form>
             <div class="row">
                 <div class="col-md-1">
@@ -71,10 +70,11 @@
             </div>
         </div>
     </div>
+
     <div class="container-md search_container_style">
         <h5 class="search_container_style" style="padding-top: 20px;padding-bottom: 10px;">Search Results</h5>
-        {% if not query_result.empty %}
-        {% for _, result in query_result.iterrows %}
+        {% if query_result %}
+        {% for result in query_result %}
         <div class="result">
             <table class="table">
                 <h4>{{ result.headlines }}</h4>
@@ -84,16 +84,30 @@
             </table>
         </div>
         {% endfor %}
+
+        <!-- Pagination links -->
+        <div class="pagination">
+            <span class="step-links">
+                {% if query_result.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ query_result.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ query_result.number }} of {{ paginator.num_pages }}.
+                </span>
+
+                {% if query_result.has_next %}
+                <a href="?page={{ query_result.next_page_number }}">next</a>
+                <a href="?page={{ paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+
         {% else %}
         <p>No results found.</p>
         {% endif %}
     </div>
-
-    {% block content %}
-    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css"> -->
 
     <script>
         function submitForm() {
@@ -120,58 +134,63 @@
             background-color: #e9e9e9;
         }
     </style>
-    <script>
-        $(document).ready(function () {
-            fetch('/headlines/')
-                .then(response => {
-                    console.log(response);
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
+<script>
+
+$(document).ready(function () {
+    fetch('/headlines/')
+        .then(response => {
+            console.log(response);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Store the headlines_list globally so that it can be used in other functions
+            var headlines_list = data;
+
+            $(".form-control").on("input", function () {
+                var keyword = $(this).val();
+                console.log(keyword);
+
+                // Use slice to get the first 10 headlines
+                if(keyword!=""){
+                let num=0;
+                var headlinesToShow = headlines_list.slice(0,5000);
+                var autocompleteList = $(".autofillList");
+                autocompleteList.empty();
+                headlinesToShow.forEach((item, i) => {
+                if(item.includes(keyword)){
+                  if(num<5){
+                    var listItem = $('<li  class="list-group-item">').text(item);
+                    autocompleteList.append(listItem);
+                    num++;
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    // Store the headlines_list globally so that it can be used in other functions
-                    var headlines_list = data;
+                }
 
-                    $(".form-control").on("input", function () {
-                        var keyword = $(this).val();
-                        console.log(keyword);
-
-                        // Use slice to get the first 10 headlines
-                        if(keyword!=""){
-                        var headlinesToShow = headlines_list.slice(0,5000);
-                        var autocompleteList = $(".autofillList");
-                        autocompleteList.empty();
-                        headlinesToShow.forEach((item, i) => {
-                        if(item.includes(keyword)){
-                          var listItem = $('<li  class="list-group-item">').text(item);
-                          autocompleteList.append(listItem);
-                        }
-
-                        });
-
-                        autocompleteList.show();
-                    }
-
-                    else{
-                      $(".autofillList").hide();
-                    }
-                    });
-
-                    $(".resultBox").on("click", "li", function () {
-                        var selectedSuggestion = $(this).text();
-                        console.log(selectedSuggestion);
-                        $("#searchInput").val(selectedSuggestion);
-                        $(".autofillList").hide();
-                    });
-                })
-                .catch(error => {
-                    console.error("Error fetching headlines.json:", error);
                 });
+
+                autocompleteList.show();
+            }
+
+            else{
+              $(".autofillList").hide();
+            }
+            });
+
+            $(".resultBox").on("click", "li", function () {
+                var selectedSuggestion = $(this).text();
+                console.log(selectedSuggestion);
+                $("#searchInput").val(selectedSuggestion);
+                $(".autofillList").hide();
+            });
+        })
+        .catch(error => {
+            console.error("Error fetching headlines.json:", error);
         });
-    </script>
-    {% endblock %}
+});
+</script>
+
 </body>
 
 </html>

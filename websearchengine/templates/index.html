@@ -6,11 +6,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=emulateIE7" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Search Engine</title>
-    <link href="../static/css/style.css" rel="stylesheet" type="text/css" />
-    <link href="../static/css/index.css" rel="stylesheet" type="text/css" />
-    <link href="https://fonts.googleapis.com/css?family=Titillium+Web&display=swap" rel="stylesheet">
-    <!-- <link href="../static/css/index.css" rel="stylesheet" type="text/css" /> -->
-    <link href="{% static 'css/index.css' %}" rel="stylesheet" type="text/css" />
+    <!-- <link href="../static/css/style.css" rel="stylesheet" type="text/css" /> -->
+     <link rel="stylesheet" type="text/css" href="{% static 'css/index.css' %}">
+    <!-- <link href="https://fonts.googleapis.com/css?family=Titillium+Web&display=swap" rel="stylesheet"> -->
+    <!-- <link href="{% static 'css/index.css' %}" rel="stylesheet" type="text/css" /> -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css">
 </head>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -163,7 +162,8 @@
 
     <div class="container-sm">
 
-        <img class="logo_cm" src="static/img/cyberminer_logo.png" alt="">
+ <img src="{% static 'img/cyberminer_logo.png' %}" alt="logo image" class="logo_cm">
+
         <form action="{% url 'search' %}" method="post">
             {% csrf_token %}
 
@@ -185,6 +185,7 @@
                     </div>
                 </div>
             </div>
+
 
             <div class="dropdown_menu">
                 <div class="dropdown">
@@ -223,13 +224,17 @@
 
                         // Use slice to get the first 10 headlines
                         if(keyword!=""){
+                        let num=0;
                         var headlinesToShow = headlines_list.slice(0,5000);
                         var autocompleteList = $(".autofillList");
                         autocompleteList.empty();
                         headlinesToShow.forEach((item, i) => {
                         if(item.includes(keyword)){
-                          var listItem = $('<li  class="list-group-item">').text(item);
-                          autocompleteList.append(listItem);
+                          if(num<5){
+                            var listItem = $('<li  class="list-group-item">').text(item);
+                            autocompleteList.append(listItem);
+                            num++;
+                            }
                         }
 
                         });
@@ -278,7 +283,9 @@
                 }
             });
         });
+
     </script>
+
 
 </body>
 
